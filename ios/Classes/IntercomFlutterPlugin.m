@@ -34,7 +34,9 @@ id unread;
     UnreadStreamHandler* unreadStreamHandler =
         [[UnreadStreamHandler alloc] init];
     [unreadChannel setStreamHandler:unreadStreamHandler];
-    
+    #if DEBUG
+    [Intercom enableLogging];
+    #endif
 }
 
 - (instancetype)initWithChannel:(FlutterMethodChannel *)channel {
