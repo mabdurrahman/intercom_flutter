@@ -1,3 +1,15 @@
+## 3.1.0
+* Added support for language_override
+
+## 3.0.0
+* Migrate to null-safety
+
+## 2.3.4
+* Added support for setting bottom padding
+
+## 2.3.3
+* Added signedUpAt user attribute
+
 ## 2.3.2
 * Fix crash if app is closed before fully initialised
 

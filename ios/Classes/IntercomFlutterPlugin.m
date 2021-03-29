@@ -20,13 +20,14 @@ id unread;
 @end
 
 @implementation IntercomFlutterPlugin
- FlutterMethodChannel *_channel;
+
+FlutterMethodChannel *_channel;
 
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
     FlutterMethodChannel* channel =
     [FlutterMethodChannel methodChannelWithName:@"maido.io/intercom"
                                 binaryMessenger:[registrar messenger]];
-    id instance = [[IntercomFlutterPlugin alloc] initWithChannel:channel];
+    IntercomFlutterPlugin* instance = [[IntercomFlutterPlugin alloc] initWithChannel:channel];
     [registrar addApplicationDelegate:instance];
     [registrar addMethodCallDelegate:instance channel:channel];
     FlutterEventChannel* unreadChannel = [FlutterEventChannel eventChannelWithName:@"maido.io/intercom/unread"
@@ -58,6 +59,14 @@ id unread;
     else if([@"registerUnidentifiedUser" isEqualToString:call.method]) {
         [Intercom registerUnidentifiedUser];
         result(@"Registered unidentified user");
+    }
+    else if([@"setBottomPadding" isEqualToString:call.method]) {
+        NSNumber *value = call.arguments[@"bottomPadding"];
+        if(value != (id)[NSNull null] && value != nil) {
+            CGFloat padding = [value doubleValue];
+            [Intercom setBottomPadding:padding];
+            result(@"Set bottom padding");
+        }
     }
     else if([@"setUserHash" isEqualToString:call.method]) {
         NSString *userHash = call.arguments[@"userHash"];
@@ -101,36 +110,7 @@ id unread;
         result(@"Presented help center");
     }
     else if([@"updateUser" isEqualToString:call.method]) {
-        ICMUserAttributes *attributes = [ICMUserAttributes new];
-        NSString *email = call.arguments[@"email"];
-        if(email != (id)[NSNull null]) {
-            attributes.email = email;
-        }
-        NSString *name = call.arguments[@"name"];
-        if(name != (id)[NSNull null]) {
-            attributes.name = name;
-        }
-        NSString *phone = call.arguments[@"phone"];
-        if(phone != (id)[NSNull null]) {
-            attributes.phone = phone;
-        }
-        NSString *userId = call.arguments[@"userId"];
-        if(userId != (id)[NSNull null]) {
-            attributes.userId = userId;
-        }
-        NSString *companyName = call.arguments[@"company"];
-        NSString *companyId = call.arguments[@"companyId"];
-        if(companyName != (id)[NSNull null] && companyId != (id)[NSNull null]) {
-            ICMCompany *company = [ICMCompany new];
-            company.name = companyName;
-            company.companyId = companyId;
-            attributes.companies = @[company];
-        }
-        NSDictionary *customAttributes = call.arguments[@"customAttributes"];
-        if(customAttributes != (id)[NSNull null]) {
-            attributes.customAttributes = customAttributes;
-        }
-        [Intercom updateUser:attributes];
+        [Intercom updateUser:[self getAttributes:call]];
         result(@"Updated user");
     }
     else if([@"logout" isEqualToString:call.method]) {
@@ -165,20 +145,20 @@ id unread;
         }
     }
     else if([@"requestNotificationPermissions" isEqualToString:call.method]) {
-    	dispatch_async(dispatch_get_main_queue(), ^{
-			UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
-			UNAuthorizationOptions authorizationOptions = 0;
-			authorizationOptions += UNAuthorizationOptionSound;
-			authorizationOptions += UNAuthorizationOptionAlert;
-			authorizationOptions += UNAuthorizationOptionBadge;
-			[center requestAuthorizationWithOptions:(authorizationOptions) completionHandler:^(BOOL granted, NSError * _Nullable error) {
-			  if (!granted || error != nil) {
-				result(@(NO));
-				return;
-			  } else {
-        		result(@(YES));
-			  }
-			}];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+            UNAuthorizationOptions authorizationOptions = 0;
+            authorizationOptions += UNAuthorizationOptionSound;
+            authorizationOptions += UNAuthorizationOptionAlert;
+            authorizationOptions += UNAuthorizationOptionBadge;
+            [center requestAuthorizationWithOptions:(authorizationOptions) completionHandler:^(BOOL granted, NSError * _Nullable error) {
+                if (!granted || error != nil) {
+                    result(@(NO));
+                    return;
+                } else {
+                    result(@(YES));
+                }
+            }];
     	});
     }
     else if([@"displayArticle" isEqualToString:call.method]) {
@@ -198,6 +178,50 @@ id unread;
     else {
         result(FlutterMethodNotImplemented);
     }
+}
+
+- (ICMUserAttributes *) getAttributes:(FlutterMethodCall *)call {
+    ICMUserAttributes *attributes = [ICMUserAttributes new];
+    NSString *email = call.arguments[@"email"];
+    if(email != (id)[NSNull null]) {
+        attributes.email = email;
+    }
+    NSString *name = call.arguments[@"name"];
+    if(name != (id)[NSNull null]) {
+        attributes.name = name;
+    }
+    NSString *phone = call.arguments[@"phone"];
+    if(phone != (id)[NSNull null]) {
+        attributes.phone = phone;
+    }
+    NSString *userId = call.arguments[@"userId"];
+    if(userId != (id)[NSNull null]) {
+        attributes.userId = userId;
+    }
+    NSString *companyName = call.arguments[@"company"];
+    NSString *companyId = call.arguments[@"companyId"];
+    if(companyName != (id)[NSNull null] && companyId != (id)[NSNull null]) {
+        ICMCompany *company = [ICMCompany new];
+        company.name = companyName;
+        company.companyId = companyId;
+        attributes.companies = @[company];
+    }
+    NSDictionary *customAttributes = call.arguments[@"customAttributes"];
+    if(customAttributes != (id)[NSNull null]) {
+        attributes.customAttributes = customAttributes;
+    }
+    
+    NSNumber *signedUpAt = call.arguments[@"signedUpAt"];
+    if(signedUpAt != (id)[NSNull null]) {
+        attributes.signedUpAt = [NSDate dateWithTimeIntervalSince1970: signedUpAt.doubleValue];
+    }
+    
+    NSString *language = call.arguments[@"language"];
+    if(language != (id)[NSNull null]) {
+        attributes.languageOverride = language;
+    }
+    
+    return attributes;
 }
 
 // Convert token to string

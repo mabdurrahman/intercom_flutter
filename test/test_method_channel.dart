@@ -34,8 +34,8 @@ class MethodCallStubbing {
   }
 
   bool matches(MethodCall methodCall) {
-    return nameMatcher.matches(methodCall.method, null) &&
-        argMatcher.matches(methodCall.arguments, null);
+    return nameMatcher.matches(methodCall.method, {}) &&
+        argMatcher.matches(methodCall.arguments, {});
   }
 }
 
