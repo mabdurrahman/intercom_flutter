@@ -204,4 +204,12 @@ class Intercom {
   static Future<bool> requestIosNotificationPermissions() {
     return _channel.invokeMethod('requestNotificationPermissions');
   }
+
+  static Future<void> displayArticle(String articleId) async {
+    await _channel.invokeMethod('displayArticle', {'articleId': articleId});
+  }
+
+  static Future<void> displayCarousel(String carouselId) async {
+    await _channel.invokeMethod('displayCarousel', {'carouselId': carouselId});
+  }
 }

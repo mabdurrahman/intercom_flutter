@@ -181,6 +181,20 @@ id unread;
 			}];
     	});
     }
+    else if([@"displayArticle" isEqualToString:call.method]) {
+        NSString *articleId = call.arguments[@"articleId"];
+        if (articleId != nil) {
+            [Intercom presentArticle:articleId];
+            result([NSString stringWithFormat:@"%@ %@", @"Article opened:", articleId]);
+        }
+    }
+    else if([@"displayCarousel" isEqualToString:call.method]) {
+        NSString *carouselId = call.arguments[@"carouselId"];
+        if (carouselId != nil) {
+            [Intercom presentCarousel:carouselId];
+            result([NSString stringWithFormat:@"%@ %@", @"Carousel opened:", carouselId]);
+        }
+    }
     else {
         result(FlutterMethodNotImplemented);
     }
